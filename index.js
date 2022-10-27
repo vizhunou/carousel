@@ -53,7 +53,7 @@ class Carousel {
     }
 
     run() {
-        this.setTransition();
+        this.handleTransitionEnd();
         this.forwardButton.addEventListener('click', this.stepForward.bind(this));
         this.backwardButton.addEventListener('click', this.stepBack.bind(this));
         this.track.addEventListener('transitionend', this.handleTransitionEnd.bind(this));
