@@ -1,8 +1,3 @@
-const Direction = {
-    FORWARD: 'forward',
-    BACKWARD: 'backward',
-};
-
 class Carousel {
     element;
 
@@ -16,7 +11,17 @@ class Carousel {
 
     transition = 'transform .5s';
 
-    direction = null;
+    step = 100;
+
+    shift = 0;
+
+    get isCurrentFrameTheFirst() {
+        return this.shift === 0;
+    }
+
+    get isCurrentFrameTheLast() {
+        return this.shift === (this.frames.length - 1) * this.step * -1;
+    }
 
     constructor(element) {
         this.element = element;
@@ -31,40 +36,35 @@ class Carousel {
     }
 
     run() {
-        this.forwardButton.addEventListener('click', this.handleForwardButtonClick.bind(this));
-        this.backwardButton.addEventListener('click', this.handleBackwardButtonClick.bind(this));
+        this.setTransition();
+        this.forwardButton.addEventListener('click', this.stepForward.bind(this));
+        this.backwardButton.addEventListener('click', this.stepBack.bind(this));
         this.track.addEventListener('transitionend', this.handleTransitionEnd.bind(this));
     }
 
     handleTransitionEnd() {
-        switch(this.direction) {
-            case Direction.BACKWARD:
-                this.removeTransition();
-                break;
-            case Direction.FORWARD:
-                this.appendFrame();
-                setTimeout(() => {
-                    this.removeTransition();
-                    this.rewind();
-                });
-                break;
+        this.removeTransition();
+
+        if (this.isCurrentFrameTheFirst) {
+            this.prependFrame();
+            this.stepForward();
         }
+        if (this.isCurrentFrameTheLast) {
+            this.appendFrame();
+            this.stepBack();
+        }
+
+        setTimeout(this.setTransition.bind(this));
     }
 
-    handleBackwardButtonClick() {
-        this.direction = Direction.BACKWARD;
-        this.prependFrame();
-        this.forward();
-        setTimeout(() => {
-            this.setTransition();
-            this.rewind();
-        });
+    stepBack() {
+        this.shift += this.step;
+        this.slide();
     }
 
-    handleForwardButtonClick() {
-        this.direction = Direction.FORWARD;
-        this.setTransition();
-        this.forward();
+    stepForward() {
+        this.shift -= this.step;
+        this.slide();
     }
 
     appendFrame() {
@@ -75,12 +75,8 @@ class Carousel {
         this.track.prepend(this.frames[this.frames.length - 1]);
     }
 
-    forward() {
-        this.track.style.transform = 'translateX(-100%)';
-    }
-
-    rewind() {
-        this.track.style.transform = 'translateX(0)';
+    slide() {
+        this.track.style.transform = `translateX(${this.shift}%)`;
     }
 
     setTransition() {
