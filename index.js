@@ -13,14 +13,31 @@ class Carousel {
 
     step = 100;
 
-    shift = 0;
+    _shift = 0;
+
+    get shift() {
+        return this._shift;
+    }
+
+    set shift(value) {
+        if (value < this.lowerShiftLimit || value > this.upperShiftLimit) return;
+        this._shift = value;
+    }
 
     get isCurrentFrameTheFirst() {
-        return this.shift === 0;
+        return this.shift === this.upperShiftLimit;
     }
 
     get isCurrentFrameTheLast() {
-        return this.shift === (this.frames.length - 1) * this.step * -1;
+        return this.shift === this.lowerShiftLimit;
+    }
+
+    get upperShiftLimit() {
+        return 0;
+    }
+
+    get lowerShiftLimit() {
+        return (this.frames.length - 1) * this.step * -1;
     }
 
     constructor(element) {
