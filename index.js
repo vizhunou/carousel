@@ -15,6 +15,24 @@ class Carousel {
 
     _shift = 0;
 
+    clientX = null;
+
+    _clientXDiff = null;
+
+    get clientXDiff() {
+        return this._clientXDiff;
+    }
+
+    set clientXDiff(value) {
+        this._clientXDiff = value;
+        const shift = 100 * Math.abs(this.clientXDiff) / this.elementDOMRect.width;
+        this.slide(this.shift + shift * (this.clientXDiff < 0 ? -1 : 1));
+    }
+
+    get elementDOMRect() {
+        return this.element.getBoundingClientRect();
+    }
+
     get shift() {
         return this._shift;
     }
@@ -54,9 +72,28 @@ class Carousel {
 
     run() {
         this.handleTransitionEnd();
-        this.forwardButton.addEventListener('click', this.stepForward.bind(this));
-        this.backwardButton.addEventListener('click', this.stepBack.bind(this));
+        this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        this.forwardButton.addEventListener('click', this.handleForwardButtonClick.bind(this));
+        this.backwardButton.addEventListener('click', this.handleBackwardButtonClick.bind(this));
         this.track.addEventListener('transitionend', this.handleTransitionEnd.bind(this));
+    }
+
+    handleMouseDown({ clientX }) {
+        console.log(clientX);
+        this.clientX = clientX;
+        document.addEventListener('mousemove', this.boundHandleMouseMove);
+        document.addEventListener('mouseup', this.handleMouseUp.bind(this), { once: true });
+    }
+
+    handleMouseMove({ clientX }) {
+        this.clientXDiff = clientX - this.clientX;
+    }
+
+    boundHandleMouseMove = this.handleMouseMove.bind(this);
+
+    handleMouseUp() {
+        document.removeEventListener('mousemove', this.boundHandleMouseMove);
+        this.clientXDiff < 0 ? this.stepForward() : this.stepBack();
     }
 
     handleTransitionEnd() {
@@ -66,12 +103,22 @@ class Carousel {
             this.prependFrame();
             this.stepForward();
         }
-        if (this.isCurrentFrameTheLast) {
+        else if (this.isCurrentFrameTheLast) {
             this.appendFrame();
             this.stepBack();
         }
 
         setTimeout(this.setTransition.bind(this));
+    }
+
+    handleBackwardButtonClick(event) {
+        event.stopPropagation();
+        this.stepBack();
+    }
+
+    handleForwardButtonClick(event) {
+        event.stopPropagation();
+        this.stepForward();
     }
 
     stepBack() {
@@ -92,8 +139,8 @@ class Carousel {
         this.track.prepend(this.frames[this.frames.length - 1]);
     }
 
-    slide() {
-        this.track.style.transform = `translateX(${this.shift}%)`;
+    slide(shift) {
+        this.track.style.transform = `translateX(${shift || this.shift}%)`;
     }
 
     setTransition() {

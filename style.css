@@ -10,6 +10,7 @@
     height: 100vh;
 
     overflow: hidden;
+    user-select: none;
 }
 
 .carousel:hover .carousel_controlButton {
